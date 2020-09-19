@@ -170,7 +170,7 @@ def train_model(input_shape=(128, 128, 1), dataset_name="carpet", latent_dim=100
       save_weights_only=False, filepath=path_to_save_model,
       monitor='val_loss', save_best_only=True)
     early_stopping_callback = EarlyStopping(
-      monitor='val_loss', min_delta=0, patience=100, verbose=0, mode='auto')
+      monitor='val_loss', min_delta=0, patience=50, verbose=0, mode='auto')
 
     # 5) load weights and training model
     if load_model:
@@ -179,7 +179,7 @@ def train_model(input_shape=(128, 128, 1), dataset_name="carpet", latent_dim=100
 
     autoencoder.fit(
       x=X_train, y=Y_train,
-      epochs=300, batch_size=batch_size,
+      epochs=200, batch_size=batch_size,
       shuffle=True, validation_data=(X_val, Y_val),
       callbacks=[model_checkpoint_callback, early_stopping_callback])
 

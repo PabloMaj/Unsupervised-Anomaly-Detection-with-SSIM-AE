@@ -203,8 +203,8 @@ if __name__ == "__main__":
 
     print(
      f"\n dataset_name={args.dataset_name}\n training_loss={args.training_loss}\n"
-     "latent_dim={args.latent_dim}\n batch_size={args.batch_size}\n"
-     "load_model={args.load_model}\n random_crop={args.random_crop}")
+     f"latent_dim={args.latent_dim}\n batch_size={args.batch_size}\n"
+     f"load_model={args.load_model}\n random_crop={args.random_crop}")
 
     train_model(
      input_shape=(128, 128, 1), dataset_name=args.dataset_name,

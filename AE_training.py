@@ -76,7 +76,7 @@ def read_data(dataset_name="carpet"):
         for category in tqdm(os.listdir(path_to_data)):
             for img_name in tqdm(os.listdir(path_to_data + str(category))):
 
-                img = cv2.imread(f"{path_to_data}{category}/{img_name}",0)
+                img = cv2.imread(f"{path_to_data}{category}/{img_name}", 0)
                 for x_start in range(0, img.shape[0]-ROI_extracted_size[0]+1, ROI_extracted_size[0]):
                     for y_start in range(0, img.shape[1]-ROI_extracted_size[1]+1, ROI_extracted_size[1]):
 
@@ -100,8 +100,8 @@ def read_data_with_random_crop(dataset_name="carpet", N_train=10**4):
 
     path_to_train_set = f"data/{dataset_name}/train/"
 
-    ROI_extracted_size = (256, 256)
-    ROI_resized_size = (128, 128)
+    img_resized_size = (256, 256)
+    crop_size = (128, 128)
 
     train_data = []
 
@@ -109,16 +109,14 @@ def read_data_with_random_crop(dataset_name="carpet", N_train=10**4):
 
         img_name = random.choice(list(os.listdir(path_to_train_set + "good")))
         img = cv2.imread(f"{path_to_train_set}good/{img_name}", 0)
-        x_start = random.randint(0, img.shape[0]-ROI_extracted_size[0])
-        y_start = random.randint(0, img.shape[1]-ROI_extracted_size[1])
-        x_end = x_start + ROI_extracted_size[0]
-        y_end = y_start + ROI_extracted_size[1]
-
-        img_ROI = img[x_start:x_end, y_start:y_end]
-        img_resized = cv2.resize(img_ROI, ROI_resized_size)
-        img_resized = img_resized.astype("float32") / 255.0
-
-        train_data.append(img_resized)
+        img_resized = cv2.resize(img, img_resized_size)
+        x_start = random.randint(0, img_resized.shape[0]-crop_size[0])
+        y_start = random.randint(0, img_resized.shape[1]-crop_size[1])
+        x_end = x_start + crop_size[0]
+        y_end = y_start + crop_size[1]
+        crop = img_resized[x_start:x_end, y_start:y_end]
+        crop = crop.astype("float32") / 255.0
+        train_data.append(crop)
 
     X_train = np.array(train_data)
 
@@ -188,7 +186,7 @@ def train_model(input_shape=(128, 128, 1), dataset_name="carpet", latent_dim=100
 
 def parse_args():
     parser = argparse.ArgumentParser('AE_SSIM')
-    parser.add_argument("--dataset_name", type=str, default="woven_fabric_2")
+    parser.add_argument("--dataset_name", type=str, default="carpet")
     parser.add_argument("--latent_dim", type=int, default=100)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--training_loss", type=str, default="ssim")

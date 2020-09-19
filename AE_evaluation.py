@@ -1,9 +1,10 @@
 import os
 import cv2
-from skimage.metrics import structural_similarity as ssim
+from skimage.measure import compare_ssim as ssim
 import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
+from AE_training import architecture_MVTEC
 
 
 def calculate_TP_TN_FP_FN(ground_truth, predicted_mask):
@@ -76,7 +77,7 @@ def read_data(dataset):
     img_predict_samples = []
     ground_truth_samples = []
 
-    for category in tqdm(os.listdir(f".data/{dataset}/test/")):
+    for category in tqdm(os.listdir(f"data/{dataset}/test/")):
         if category == "good":
             continue
         for img_name in os.listdir(f"data/{dataset}/test/{category}/"):
@@ -152,43 +153,55 @@ def calculate_metrics(loss_samples, ground_truth_samples, thresh_max=1):
     return metric_results, DICE_max, YoundenStat_max, AUC
 
 
-def create_predicted(dataset_name="carpet"):
+def create_predicted(dataset_name="carpet", latent_dim=100, training_loss="ssim", batch_size=8):
+
+    autoencoder = architecture_MVTEC(input_shape=(128, 128, 1), latent_dim=latent_dim)
+    path_to_load_model = f"model_weights/{dataset_name}/"
+    name = f"a_{latent_dim}_loss_{training_loss}_batch_{batch_size}.hdf5"
+    path_to_load_model += name
+    autoencoder.load_weights(path_to_load_model)
 
     ROI_resized_size = (128, 128)
 
     for category in tqdm(os.listdir(f"data/{dataset_name}/test/")):
 
-        if category not in os.listdir(f"results/{dataset_name}/predicted/"):
-            os.mkdir(f"results/{dataset_name}/predicted/{category}/")
+        try:
+            os.makedirs(f"results/{dataset_name}/predicted/{category}/")
+        except:
+            pass
 
-        if category not in os.listdir(f"results/{dataset_name}/loss/"):
-            os.mkdir(f"results/{dataset_name}/loss/{category}/")
+        try:
+            os.makedirs(f"results/{dataset_name}/loss/{category}/")
+        except:
+            pass
 
-    for img_name in tqdm(os.listdir(f"data/{dataset_name}/test/{category}/")):
+        for img_name in tqdm(os.listdir(f"data/{dataset_name}/test/{category}/")):
 
-        img_in = cv2.imread(f"data/{dataset_name}/test/{category}/{img_name}", 0)
-        img_in = cv2.resize(img_in, ROI_resized_size)
-        img_in = img_in.astype("float32") / 255.0
-        X_test = []
-        X_test.append(img_in)
-        X_test = np.array(X_test)
-        X_test = np.expand_dims(X_test, axis=-1)
-        img_predict = autoencoder.predict(X_test)
+            img_in = cv2.imread(f"data/{dataset_name}/test/{category}/{img_name}", 0)
+            img_in = cv2.resize(img_in, ROI_resized_size)
+            img_in = img_in.astype("float32") / 255.0
+            X_test = []
+            X_test.append(img_in)
+            X_test = np.array(X_test)
+            X_test = np.expand_dims(X_test, axis=-1)
+            img_predict = autoencoder.predict(X_test)
 
-    cv2.imwrite(f"results/{dataset_name}/predicted/{category}/{img_name}",img_predict[0,:,:,:]*255)
+            cv2.imwrite(f"results/{dataset_name}/predicted/{category}/{img_name}", img_predict[0, :, :, :]*255)
 
-    mssim, grad, S = img_ssim = ssim(img_in[1:-1,1:-1],img_predict[0,1:-1,1:-1,0],gradient=True,full=True,multichannel=False)
-    
-    plt.clf()
-    plt.imshow(1-S,vmax=1.5,cmap="jet")
-    plt.colorbar()
+            mssim, grad, S = ssim(img_in[1:-1, 1:-1], img_predict[0, 1:-1, 1:-1, 0], gradient=True, full=True, multichannel=False)
 
-    plt.savefig(f"results/{dataset_name}/loss/{category}/{img_name}")
+            plt.clf()
+            plt.imshow(1-S, vmax=1.5, cmap="jet")
+            plt.colorbar()
+
+            plt.savefig(f"results/{dataset_name}/loss/{category}/{img_name}")
 
 
 if __name__ == "__main__":
-    datasets = ["grid", "wool_1", "wool_2", "carpet"]
+    datasets = ["carpet"]
     for dataset in datasets:
+        create_predicted(dataset_name=dataset)
+        print("Koniec")
         img_oryg_samples, img_predict_samples, ground_truth_samples = read_data(dataset=dataset)
         loss_samples = calculate_loss(img_oryg_samples=img_oryg_samples, img_predict_sample=img_predict_samples, win_size=11)
         thresh_max = np.max(np.array(loss_samples))

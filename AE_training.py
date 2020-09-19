@@ -161,8 +161,9 @@ def train_model(input_shape=(128, 128, 1), dataset_name="carpet", latent_dim=100
 
     # 4) set callbacks
 
-    print("Yolo")
-    
+    if not os.path.exists(f"model_weights/{dataset_name}/"):
+        os.mkdir(f"model_weights/{dataset_name}/")
+
     path_to_save_model = f"model_weights/{dataset_name}/"
     name = f"a_{latent_dim}_loss_{training_loss}_batch_{batch_size}.hdf5"
     path_to_save_model += name

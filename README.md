@@ -21,7 +21,7 @@ python AE_training.py
 [--batch_size BATCH_SIZE] [--training_loss TRAINING_LOSS]
 [--load_model LOAD_MODEL] [--random_crop RANDOM_CROP]
 
-Parameters:
+**Parameters**:
 - dataset_name (name of dataset used for training) e.g. "grid", "carpet", "texture_1", "texture_2",
 - latent_dim (dimension of bottleneck in autoencoder architecture) e.g. 100,
 - batch_size (batch size used for autoencoder training) e.g. 8,

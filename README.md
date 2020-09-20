@@ -12,6 +12,8 @@ Used datasets are available on the websites:
 - *grid* and *carpet*: https://www.mvtec.com/company/research/datasets/mvtec-ad/,
 - *woven fabrics* (*texture_1* and *texture_2*): https://www.mvtec.com/company/research/publications/
 
+Put downloaded datasets in directory *data/*
+
 ## Training
 
 python AE_training.py 
@@ -20,3 +22,5 @@ python AE_training.py
 [--load_model LOAD_MODEL] [--random_crop RANDOM_CROP]
 
 ## Evaluation
+
+python AE_evaluation.py

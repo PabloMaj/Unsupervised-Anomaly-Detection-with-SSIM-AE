@@ -14,4 +14,9 @@ Used datasets are available on the websites:
 
 ## Training
 
+python AE_training.py 
+[-h] [--dataset_name DATASET_NAME] [--latent_dim LATENT_DIM]
+[--batch_size BATCH_SIZE] [--training_loss TRAINING_LOSS]
+[--load_model LOAD_MODEL] [--random_crop RANDOM_CROP]
+
 ## Evaluation

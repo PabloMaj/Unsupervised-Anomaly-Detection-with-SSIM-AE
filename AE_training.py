@@ -100,8 +100,12 @@ def read_data_with_random_crop(dataset_name="carpet", N_train=10**4):
 
     path_to_train_set = f"data/{dataset_name}/train/"
 
-    img_resized_size = (256, 256)
-    crop_size = (128, 128)
+    if dataset_name in ["texture_1", "texture_2"]:
+        img_resized_size = (256, 256)
+        crop_size = (128, 128)
+    elif dataset_name in ["carpet", "grid"]:
+        img_resized_size = (512, 512)
+        crop_size = (128, 128)
 
     train_data = []
 

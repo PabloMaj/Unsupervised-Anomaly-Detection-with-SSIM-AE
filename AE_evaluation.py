@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 from AE_training import architecture_MVTEC
-
+from scipy.ndimage import gaussian_filter
 
 def calculate_TP_TN_FP_FN(ground_truth, predicted_mask):
     TP = np.sum(np.multiply((ground_truth == predicted_mask), predicted_mask == 1))
@@ -81,7 +81,7 @@ def read_data(dataset):
         if category == "good":
             continue
         for img_name in os.listdir(f"data/{dataset}/test/{category}/"):
-            img_predict = cv2.imread(f"{dataset}/predicted/{category}/{img_name}", 0)
+            img_predict = cv2.imread(f"results/{dataset}/predicted/{category}/{img_name}", 0)
 
             img_oryg = cv2.imread(f"data/{dataset}/test/{category}/{img_name}", 0)
             img_oryg = cv2.resize(img_oryg, img_predict.shape)
@@ -109,6 +109,7 @@ def calculate_loss(img_oryg_samples, img_predict_samples, win_size=11):
         img_predict = img_predict_samples[i]
         _, S = ssim(img_oryg, img_predict, gradient=False, full=True, multichannel=False, win_size=win_size)
         loss = 1/2 - S/2
+        loss = gaussian_filter(loss, sigma=4)
         loss_samples.append(loss)
 
     return loss_samples
@@ -161,7 +162,10 @@ def create_predicted(dataset_name="carpet", latent_dim=100, training_loss="ssim"
     path_to_load_model += name
     autoencoder.load_weights(path_to_load_model)
 
-    ROI_resized_size = (128, 128)
+    img_in_size = (1024, 1024)
+    img_resized_size = (256, 256)
+    crop_size = (128, 128)
+    step = 16
 
     for category in tqdm(os.listdir(f"data/{dataset_name}/test/")):
 
@@ -178,31 +182,51 @@ def create_predicted(dataset_name="carpet", latent_dim=100, training_loss="ssim"
         for img_name in tqdm(os.listdir(f"data/{dataset_name}/test/{category}/")):
 
             img_in = cv2.imread(f"data/{dataset_name}/test/{category}/{img_name}", 0)
-            img_in = cv2.resize(img_in, ROI_resized_size)
             img_in = img_in.astype("float32") / 255.0
-            X_test = []
-            X_test.append(img_in)
-            X_test = np.array(X_test)
-            X_test = np.expand_dims(X_test, axis=-1)
-            img_predict = autoencoder.predict(X_test)
+            img_resized = cv2.resize(img_in, img_resized_size)
+            img_out = np.zeros(shape=img_resized.shape)
+            overlap = np.zeros(shape=img_resized.shape)
 
-            cv2.imwrite(f"results/{dataset_name}/predicted/{category}/{img_name}", img_predict[0, :, :, :]*255)
+            for x in range(0, img_resized.shape[0]-crop_size[0]+1, step):
+                for y in range(0, img_resized.shape[1]-crop_size[1]+1, step):
 
-            mssim, grad, S = ssim(img_in[1:-1, 1:-1], img_predict[0, 1:-1, 1:-1, 0], gradient=True, full=True, multichannel=False)
+                    x_start = x
+                    x_end = x_start + crop_size[0]
+                    y_start = y
+                    y_end = y + crop_size[1]
+                    crop = img_resized[x_start:x_end, y_start:y_end]
+                    
+                    X_test = []
+                    X_test.append(crop)
+                    X_test = np.array(X_test)
+                    X_test = np.expand_dims(X_test, axis=-1)
+                    img_predict = autoencoder.predict(X_test)
+
+                    img_out[x_start:x_end, y_start:y_end] += img_predict[0,:,:,0]
+                    overlap[x_start:x_end, y_start:y_end] += np.ones(shape=crop_size)
+
+            overlap = np.where(overlap == 0, 1, overlap)
+            img_out = img_out/overlap
+            img_out = cv2.resize(img_out, img_in_size)
+
+            cv2.imwrite(f"results/{dataset_name}/predicted/{category}/{img_name}", img_out*255)
+
+            _, _, S = ssim(img_in[1:-1, 1:-1], img_out[1:-1, 1:-1], gradient=True, full=True, multichannel=False)
 
             plt.clf()
-            plt.imshow(1-S, vmax=1.5, cmap="jet")
+            plt.imshow(1-S, vmax=1, cmap="jet")
             plt.colorbar()
 
             plt.savefig(f"results/{dataset_name}/loss/{category}/{img_name}")
 
 
 if __name__ == "__main__":
-    datasets = ["carpet"]
+    datasets = ["grid"]
     for dataset in datasets:
-        create_predicted(dataset_name=dataset)
-        print("Koniec")
+        #create_predicted(dataset_name=dataset)
         img_oryg_samples, img_predict_samples, ground_truth_samples = read_data(dataset=dataset)
-        loss_samples = calculate_loss(img_oryg_samples=img_oryg_samples, img_predict_sample=img_predict_samples, win_size=11)
+        loss_samples = calculate_loss(img_oryg_samples=img_oryg_samples, img_predict_samples=img_predict_samples, win_size=11)
         thresh_max = np.max(np.array(loss_samples))
         metric_results, DICE_max, YoundenStat_max, AUC = calculate_metrics(loss_samples=loss_samples, ground_truth_samples=ground_truth_samples, thresh_max=thresh_max)
+        print(f"dataset:{dataset}\nAUC:{AUC}\n"
+        f"YoundenStat_max:{YoundenStat_max}\nDICE_max:{DICE_max}\n")

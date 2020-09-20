@@ -1,0 +1,4 @@
+Used datasets are available on the websites:
+
+-grid and carpet: https://www.mvtec.com/company/research/datasets/mvtec-ad/,
+-woven fabrics (texture_1 and texture_2): https://www.mvtec.com/company/research/publications/

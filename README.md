@@ -1,8 +1,7 @@
 # Unsupervised-Anomaly-Detection-with-SSIM-AE
 
 ## Story on Medium
-
-[https://medium.com/@majpaw1996/anomaly-detection-in-computer-vision-with-ssim-ae-2d5256ffc06b] (Anomaly Detection in Computer Vision with SSIM-AE)
+[Anomaly Detection in Computer Vision with SSIM-AE](https://medium.com/@majpaw1996/anomaly-detection-in-computer-vision-with-ssim-ae-2d5256ffc06b)
 
 ## Related Works
 

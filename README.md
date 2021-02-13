@@ -1,5 +1,9 @@
 # Unsupervised-Anomaly-Detection-with-SSIM-AE
 
+## Story on Medium
+
+[https://medium.com/@majpaw1996/anomaly-detection-in-computer-vision-with-ssim-ae-2d5256ffc06b] Anomaly Detection in Computer Vision with SSIM-AE
+
 ## Related Works
 
 [1] Bergmann, Paul, et al. "Improving unsupervised defect segmentation by applying structural similarity to autoencoders." arXiv preprint arXiv:1807.02011 (2018)
